@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiki Interactiva sobre Música Popular</title>
+  <!--<script src="https://cdn.tailwindcss.com/3.4.17"></script>-->
+  <script src="tailwind.css"></script>
+  <style>
+    /* Fuentes Locales - Playfair Display */
+    @font-face {
+      font-family: 'Playfair Display';
+      src: url('fonts/PlayfairDisplay-Bold.woff2') format('woff2'),
+           url('fonts/PlayfairDisplay-Bold.woff') format('woff'),
+           url('fonts/PlayfairDisplay-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      src: url('fonts/PlayfairDisplay-Black.woff2') format('woff2'),
+           url('fonts/PlayfairDisplay-Black.woff') format('woff'),
+           url('fonts/PlayfairDisplay-Black.ttf') format('truetype');
+      font-weight: 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    
+    /* Fuentes Locales - Lora */
+    @font-face {
+      font-family: 'Lora';
+      src: url('fonts/Lora-Regular.woff2') format('woff2'),
+           url('fonts/Lora-Regular.woff') format('woff'),
+           url('fonts/Lora-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Lora';
+      src: url('fonts/Lora-SemiBold.woff2') format('woff2'),
+           url('fonts/Lora-SemiBold.woff') format('woff'),
+           url('fonts/Lora-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    
+    .wiki-title { font-family: 'Playfair Display', Georgia, serif; letter-spacing: -1px; }
+    .wiki-body { font-family: 'Lora', Georgia, serif; }
+    .wiki-link { color: #d4a574; text-decoration: underline; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+    .wiki-link:hover { opacity: 0.8; }
+    .breadcrumb { font-size: 0.85rem; color: #8b7355; margin: 1rem 0; }
+    .breadcrumb a { color: #d4a574; cursor: pointer; margin: 0 0.25rem; }
+    .related-box { border: 2px solid #d4a574; border-radius: 0.5rem; padding: 1rem; margin: 1.5rem 0; background-color: #faf7f3; }
+    .related-box h4 { color: #2c1810; margin: 0 0 0.75rem 0; font-weight: bold; }
+    .related-item { color: #5a4a42; margin: 0.5rem 0; }
+    .related-link { color: #d4a574; cursor: pointer; text-decoration: underline; }
+    .article-container { display: none; scroll-behavior: smooth; }
+    .article-container.active { display: block; animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .search-result { padding: 0.75rem; margin: 0.5rem 0; background-color: #f0e6d8; border-radius: 0.375rem; cursor: pointer; color: #2c1810; }
+    .search-result:hover { background-color: #d4a574; }
+    .nota-destacable { border-left: 5px solid #d4a574; background-color: #fff9f3; padding: 1rem; margin: 1rem 0; }
+    h2 { border-bottom: 2px solid #d4a574; padding-bottom: 0.75rem; margin-top: 2rem; color: #2c1810; }
+    h3 { margin-top: 1.5rem; font-weight: 600; color: #2c1810; }
+    ul, ol { margin-left: 1.5rem; }
+    li { margin: 0.75rem 0; color: #5a4a42; }
+    .video-link { color: #d4a574; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: #f0e6d8; border-radius: 0.375rem; margin: 0.5rem 0; }
+    .video-link:hover { background-color: #d4a574; color: #2c1810; }
+    .bibliography-item { padding-left: 1.5rem; text-indent: -1.5rem; margin: 0.75rem 0; color: #5a4a42; }
+    .resources-section { border: 2px dashed #d4a574; padding: 1rem; margin: 1.5rem 0; border-radius: 0.5rem; background-color: #faf7f3; }
+    .resources-section h4 { color: #2c1810; margin: 0.5rem 0; font-weight: bold; }
+    .technical-box { background-color: #f0e6d8; padding: 1rem; margin: 1rem 0; border-left: 4px solid #d4a574; border-radius: 0.375rem; }
+    .technical-box strong { color: #2c1810; }
+    em { font-style: italic; color: #5a4a42; }
+    .subheading { font-size: 1.1rem; font-weight: 600; color: #2c1810; margin: 1.5rem 0 0.75rem 0; }
+    .keywords { display: none !important; }
+    
+    /* Estilos para botones de navegacion */
+    .nav-button { 
+      background-color: #3d2817 !important; 
+      color: #d4a574 !important;
+      cursor: pointer;
+      border: none;
+    }
+    .nav-button:hover { 
+      background-color: #6b5344 !important; 
+      color: #f5f1ed !important;
+    }
+    .nav-button.active { 
+      background-color: #d4a574 !important; 
+      color: #2c1810 !important; 
+    }
+    
+    #mobile-articles-menu.hidden {
+      display: none !important;
+    }
+    
+    /* Responsive Design para móviles */
+    @media (max-width: 768px) {
+      #app { 
+        flex-direction: column; 
+      }
+      
+      #sidebar { 
+        width: 100%; 
+        height: auto; 
+        border-bottom: 2px solid #d4a574;
+        overflow-y: auto;
+      }
+      
+      #content { 
+        flex: 1; 
+        overflow-y: auto;
+        width: 100%;
+      }
+      
+      nav { 
+        display: none;
+      }
+      
+      article { 
+        padding: 1rem !important; 
+        max-width: 100%;
+      }
+      
+      #main-title { 
+        font-size: 1.3rem !important; 
+      }
+      
+      .text-5xl { 
+        font-size: 1.875rem !important; 
+      }
+      
+      .text-4xl { 
+        font-size: 1.5rem !important; 
+      }
+      
+      .text-lg { 
+        font-size: 1rem !important; 
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .p-6 { 
+        padding: 1rem !important; 
+      }
+      
+      .p-4 { 
+        padding: 0.75rem !important; 
+      }
+      
+      h2 { 
+        font-size: 1.3rem; 
+      }
+      
+      .video-link { 
+        font-size: 0.85rem; 
+        padding: 0.4rem 0.8rem; 
+      }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <!--
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  -->
+ </head>
+ <body class="h-full wiki-body" style="background-color: #f5f1ed;">
+  <div id="app" class="h-full w-full flex overflow-hidden md:flex-row flex-col">
+   <aside id="sidebar" class="w-full md:w-80 md:flex-shrink-0 flex flex-col h-auto md:h-full overflow-y-auto md:overflow-hidden" style="background-color: #2c1810;">
+    <div class="p-6 border-b md:border-b md:border-r-0 border-b" style="border-color: #d4a574;">
+     <h1 class="wiki-title text-2xl font-bold mb-4" style="color: #d4a574;">Wiki Musica Popular</h1>
+     <p class="text-sm" style="color: #c9b8a8;">Para estudiantes de Nivel Medio de Musica</p>
+    </div>
+    <div class="p-4 border-b" style="border-color: #d4a574;">
+     <div class="relative">
+      <input type="text" id="search-input" placeholder="Buscar por palabras clave..." class="w-full px-4 py-2 pl-10 rounded-lg text-sm focus:outline-none" style="background-color: #3d2817; color: #f5f1ed; border: 1px solid #d4a574;">
+      <svg class="absolute left-3 top-2.5 w-4 h-4" style="color: #d4a574;" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+     </div>
+     <div id="search-results" class="mt-2 max-h-48 overflow-y-auto"></div>
+    </div>
+    <div class="p-4 border-b md:hidden" style="border-color: #d4a574;">
+     <button id="articles-toggle-btn" class="w-full px-4 py-2.5 rounded-lg text-sm transition-all" style="background-color: #3d2817; color: #d4a574; border: 1px solid #d4a574;">Artículos ▼</button>
+     <div id="mobile-articles-menu" class="mt-2 space-y-2 hidden">
+      <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('home')">Inicio</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('revolucion-industrial')">Rev. Industrial</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('blues')">Blues</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('jazz')">Jazz</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('afrobeat')">Afrobeat</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('bossa-nova')">Bossa Nova</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('hiphop')">Hip-Hop</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('rumba')">Rumba Congo</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('british-invasion')">Rock Britanico</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('electronic')">Musica Electronica</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('reggae')">Reggae</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticleAndCloseMenu('kpop')">K-Pop</button>
+     </div>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-4 py-4">
+     <div class="text-xs font-bold mb-3" style="color: #d4a574;">
+      ARTICULOS
+     </div>
+     <div class="space-y-2"><button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all active" onclick="loadArticle('home')">Inicio</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('revolucion-industrial')">Rev. Industrial</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('blues')">Blues</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('jazz')">Jazz</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('afrobeat')">Afrobeat</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('bossa-nova')">Bossa Nova</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('hiphop')">Hip-Hop</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('rumba')">Rumba Congo</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('british-invasion')">Rock Britanico</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('electronic')">Musica Electronica</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('reggae')">Reggae</button> <button class="nav-button w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all" onclick="loadArticle('kpop')">K-Pop</button>
+     </div>
+    </nav>
+    <div class="p-4 border-t" style="border-color: #d4a574;">
+     <div class="text-xs flex items-center gap-2" style="color: #4caf50;">
+      <div class="w-2 h-2 rounded-full" style="background-color: #4caf50;"></div> Offline Ready
+     </div>
+    </div>
+   </aside>
+   <main id="content" class="flex-1 h-full overflow-y-auto w-full md:w-auto">
+    <article class="max-w-4xl mx-auto px-8 py-8 wiki-body">
+     <div id="article-home" class="article-container active">
+      <div class="keywords">
+       inicio bienvenida introducción estudiantes análisis contexto recursos educativos temas principales
+      </div>
+      <div class="text-center mb-12">
+       <h1 class="wiki-title text-5xl font-bold mb-4" style="color: #2c1810;">Wiki Interactiva sobre Musica Popular</h1>
+       <p class="text-lg" style="color: #5a4a42;">Analisis | Contexto Historico | Recursos Educativos</p>
+      </div>
+      <div class="nota-destacable">
+       <p style="color: #2c1810; font-weight: bold;">Para Estudiantes de Nivel Medio</p>
+       <p style="color: #5a4a42; margin-top: 0.5rem;">Esta wiki es una introduccion accesible a la Musica Popular moderna. Cada articulo contiene analisis musical, contexto historico, discografia esencial y recursos para profundizar tu conocimiento. <strong>Todo esta guardado localmente - funciona sin internet.</strong></p>
+      </div>
+      <h2>Temas Principales</h2>
+      <div class="space-y-4 mt-6">
+       <div class="p-4 rounded-lg" style="background-color: #faf7f3; border: 2px solid #d4a574; cursor: pointer;" onclick="loadArticle('revolucion-industrial')">
+        <h4 style="color: #2c1810;">Revolucion Industrial</h4>
+        <p style="color: #8b7355; font-size: 0.9rem;">Fonografos, radiodifusion y estandarizacion musical</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background-color: #faf7f3; border: 2px solid #d4a574; cursor: pointer;" onclick="loadArticle('blues')">
+        <h4 style="color: #2c1810;">Blues</h4>
+        <p style="color: #8b7355; font-size: 0.9rem;">Raices afroamericanas y la progresion I-IV-V</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background-color: #faf7f3; border: 2px solid #d4a574; cursor: pointer;" onclick="loadArticle('jazz')">
+        <h4 style="color: #2c1810;">Jazz</h4>
+        <p style="color: #8b7355; font-size: 0.9rem;">Sintesis africano-europea en Nueva Orleans</p>
+       </div>
+       <div class="p-4 rounded-lg" style="background-color: #faf7f3; border: 2px solid #d4a574; cursor: pointer;" onclick="loadArticle('afrobeat')">
+        <h4 style="color: #2c1810;">Afrobeat</h4>
+        <p style="color: #8b7355; font-size: 0.9rem;">Polirritimia yoruba y groove moderno</p>
+       </div>
+      </div>
+     </div><!-- REVOLUCION INDUSTRIAL -->
+     <div id="article-revolucion-industrial" class="article-container">
+      <div class="keywords">
+       revolución industrial fonógrafo grabación radio tecnología música industria discográfica Edison cilindros cera gramófono
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Revolucion Industrial y la Musica Popular</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>La Musica Popular surge como resultado directo de inventos tecnologicos: el fonografo, la radio y la grabacion electrica transformaron como escuchamos musica.</em></p>
+      <h2>Los Inventos Clave (1877-1920)</h2>
+      <p style="color: #5a4a42;">El fonografo de Edison (1877) fue el primer aparato que podia grabar y reproducir sonido. Antes de esto, la musica solo existia en vivo. Esto cambio todo.</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Fonografo (1877):</strong> Primeras grabaciones en cilindros de cera</li>
+       <li><strong>Gramofono (1901):</strong> Discos mas practicos y duraderos</li>
+       <li><strong>Radio (1920s):</strong> Transmision de musica a masas sin grabacion previa</li>
+       <li><strong>Grabacion electrica (1925):</strong> Mejor calidad de sonido</li>
+      </ul>
+      <div class="technical-box">
+       <strong>Impacto Fundamental:</strong> Por primera vez, la musica podia ser comprada como producto. Surge la <strong>industria discografica</strong> como negocio.
+      </div>
+      <div class="subheading">
+       El Formato de Cancion: 3 Minutos
+      </div>
+      <p style="color: #5a4a42;">Por que casi todas las canciones duran 3 minutos? Los cilindros iniciales permitian maximo 2-4 minutos. Las industrias adopto esto como estandar.</p>
+      <div class="subheading">
+       Tin Pan Alley: Fabrica de Canciones
+      </div>
+      <p style="color: #5a4a42;">Nueva York en 1880-1930s se convierte en centro de produccion musical. Compositores, letristas y productores trabajan en cadena, como en una fabrica, creando canciones para vender.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=SQNymITr5Z8" target="_blank" rel="noopener noreferrer" class="video-link">Historia del Fonografo</a> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener noreferrer" class="video-link">Impacto de la Radio</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Attali, Jacques. Noise: The Political Economy of Music. University of Minnesota Press, 1985.
+       </div>
+       <div class="bibliography-item">
+        Frith, Simon. Performing Rites: On the Value of Popular Music. Oxford University Press, 1996.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('blues')">Blues (primer genero grabado masivamente)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('hiphop')">Hip-Hop (reutilizacion digital de grabaciones)</span>
+       </div>
+      </div>
+     </div><!-- BLUES -->
+     <div id="article-blues" class="article-container">
+      <div class="keywords">
+       blues raíces afroamericanas Delta Misisipi acordes progresión compases improvisación call-and-response
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Blues: Raiz de la Musica Popular</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>El Blues es la sintesis de tradiciones africanas, armonia europea y la realidad de la esclavitud estadounidense.</em></p>
+      <h2>Origenes del Blues (1890s-1920s)</h2>
+      <p style="color: #5a4a42;">El Blues surge en el Delta del Misisipi como mezcla unica de culturas:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Africano:</strong> Notas dobladas (bent notes), repeticion ritmica</li>
+       <li><strong>Europeo:</strong> Acordes y notas occidentales</li>
+       <li><strong>Americano:</strong> Historias de trabajo duro, amor perdido y migracion</li>
+      </ul>
+      <div class="subheading">
+       La Progresion I-IV-V
+      </div>
+      <div class="technical-box">
+       <strong>Estructura Basica:</strong>
+       <p style="margin-top: 0.5rem;">El Blues usa solo 3 acordes: I (inicio), IV (cambio), V (tension)</p>
+       <p>Estos acordes se repiten infinitamente, permitiendo que el musico improvise sobre ellos.</p>
+       <p style="margin-top: 0.5rem;"><em>Esta simple estructura es la base de Rock, Pop, Country, Hip-Hop y muchos otros generos.</em></p>
+      </div>
+      <div class="subheading">
+       Los 12 Compases
+      </div>
+      <p style="color: #5a4a42;">Una cancion de Blues tipica tiene 12 compases, que se repiten una y otra vez. Esto permite contar una historia breve y permitir improvisacion.</p>
+      <div class="subheading">
+       Call-and-Response
+      </div>
+      <p style="color: #5a4a42;">Una tecnica donde una voz llama (canta) y otra responde. Es una tradicion africana que aparece en el Blues y despues en el <span class="wiki-link" onclick="loadArticle('hiphop')">Hip-Hop</span>.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=9MhElNLr2-M" target="_blank" rel="noopener noreferrer" class="video-link">B.B. King - The Thrill is Gone</a> <a href="https://www.youtube.com/watch?v=hUJjFJTZKoo" target="_blank" rel="noopener noreferrer" class="video-link">Muddy Waters - Hoochie Coochie Man</a> <a href="https://www.youtube.com/watch?v=pQ1dHMJBRUw" target="_blank" rel="noopener noreferrer" class="video-link">Bessie Smith - St. Louis Blues</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Jones, LeRoi (Amiri Baraka). Blues People: Negro Music in White America. William Morrow, 1963.
+       </div>
+       <div class="bibliography-item">
+        Palmer, Robert. Deep Blues. Viking Press, 1981.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('jazz')">Jazz (extension del Blues)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('british-invasion')">Rock Britanico (interpretacion del Blues)</span>
+       </div>
+      </div>
+     </div><!-- JAZZ -->
+     <div id="article-jazz" class="article-container">
+      <div class="keywords">
+       jazz improvisación Nueva Orleans bandas metales ragtime épocas swing bebop cool
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Jazz: La Improvisacion</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>El Jazz es musica que se crea EN EL MOMENTO, sin ensayar previamente. Es la sintesis de Blues, tradicion africana y orquestacion europea.</em></p>
+      <h2>Nacimiento en Nueva Orleans (1900s)</h2>
+      <p style="color: #5a4a42;">Nueva Orleans es unica: ciudad con mezcla de culturas. El Jazz nace aqui de:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Bandas de metales:</strong> Tradicion de desfiles y celebraciones</li>
+       <li><strong>Blues rural:</strong> Migrantes traen estilos musicales</li>
+       <li><strong>Ragtime:</strong> Piano sincopado como influencia</li>
+      </ul>
+      <div class="subheading">
+       Improvisacion: Libertad en la Estructura
+      </div>
+      <p style="color: #5a4a42;">El Jazz es revolucionario porque cada performance es unica. Los musicos improvisan (inventan) sus partes en el momento, pero siempre respetando la estructura armonica basica.</p>
+      <div class="subheading">
+       Las Epocas del Jazz
+      </div>
+      <ul style="color: #5a4a42;">
+       <li><strong>New Orleans Jazz (1900s-1920):</strong> Estilo colectivo, muchas voces a la vez</li>
+       <li><strong>Swing (1930s-1940s):</strong> Big bands grandes, baile masivo</li>
+       <li><strong>Bebop (1940s):</strong> Velocidad rapida, complejidad armonica</li>
+       <li><strong>Cool Jazz (1950s):</strong> Mas suave y sofisticado</li>
+      </ul>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=IX3ydN4CHQU" target="_blank" rel="noopener noreferrer" class="video-link">Louis Armstrong - West End Blues</a> <a href="https://www.youtube.com/watch?v=u8RJlZNr8s8" target="_blank" rel="noopener noreferrer" class="video-link">Miles Davis - So What</a> <a href="https://www.youtube.com/watch?v=JMCMFfYEpWU" target="_blank" rel="noopener noreferrer" class="video-link">Charlie Parker - Ornithology</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Gioia, Ted. The History of Jazz. Oxford University Press, 2011.
+       </div>
+       <div class="bibliography-item">
+        DeVeaux, Scott. The Birth of Bebop: A Social and Musical History. University of California Press, 1997.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('blues')">Blues (fundacion)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('bossa-nova')">Bossa Nova (Jazz tropical)</span>
+       </div>
+      </div>
+     </div><!-- AFROBEAT -->
+     <div id="article-afrobeat" class="article-container">
+      <div class="keywords">
+       afrobeat ritmos yoruba poliritmia funk groove Lagos Nigeria Fela Kuti resistencia política
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Afrobeat: Ritmo Africano Moderno</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>Afrobeat fusiona ritmos yoruba tradicionales con Jazz y Funk moderno. Fela Kuti lo convirtio en arma de resistencia politica.</em></p>
+      <h2>Genesis en Lagos, Nigeria (1960s-1970s)</h2>
+      <p style="color: #5a4a42;">Fela Kuti, musico nigeriano formado en Jazz, crea Afrobeat en Lagos combinando:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Jazz:</strong> Improvisacion y acordes complejos</li>
+       <li><strong>Funk:</strong> Groove sincopado y energia</li>
+       <li><strong>Yoruba tradicional:</strong> Ritmos poliritmicos de Africa</li>
+      </ul>
+      <div class="subheading">
+       La Polirritimia: Multiples Ritmos a la Vez
+      </div>
+      <p style="color: #5a4a42;">En Afrobeat, diferentes instrumentos tocan ritmos distintos simultaneamente. Mientras el bajo toca un patron, las congas tocan otro, y las trompetas otro mas. Esto crea un sonido hipnotizante y danzador.</p>
+      <div class="subheading">
+       El Groove Hipnotizante
+      </div>
+      <p style="color: #5a4a42;">A diferencia de otras canciones, Afrobeat usa un groove (patron ritmico) que se repite durante 7-10 minutos. No hay cambios bruscos, solo desarrollo gradual. Es musica para el cuerpo, no solo para los oidos.</p>
+      <div class="subheading">
+       Mensaje Politico
+      </div>
+      <p style="color: #5a4a42;">Fela no hizo musica para divertir. Sus canciones criticaban el gobierno militar de Nigeria y la dominacion occidental. Fue arrestado varias veces pero nunca dejo de protestar con su musica.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=PECPl_OsHFU" target="_blank" rel="noopener noreferrer" class="video-link">Fela Kuti - Water No Get Enemy</a> <a href="https://www.youtube.com/watch?v=QW0Ydj-W-KY" target="_blank" rel="noopener noreferrer" class="video-link">Fela Kuti - Zombie</a> <a href="https://www.youtube.com/watch?v=qc3Wrt-zcAc" target="_blank" rel="noopener noreferrer" class="video-link">Tony Allen - Ife Love</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Veal, Michael E. Fela: The Life and Times of an African Musical Icon. Temple University Press, 2000.
+       </div>
+       <div class="bibliography-item">
+        Collins, John. Highlife Time. University of Pennsylvania Press, 1976.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('rumba')">Rumba Congolesa (ritmo africano similar)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('reggae')">Reggae (musica africana moderna)</span>
+       </div>
+      </div>
+     </div><!-- BOSSA NOVA -->
+     <div id="article-bossa-nova" class="article-container">
+      <div class="keywords">
+       bossa nova samba Brasil Río de Janeiro guitarra acordes sofisticación Joao Gilberto
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Bossa Nova: Sofisticacion Brasilena</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>Bossa Nova es la fusion de Samba brasileno con Jazz sofisticado. Es elegancia y groove combinados.</em></p>
+      <h2>Nacimiento en Brasil (1950s-1960s)</h2>
+      <p style="color: #5a4a42;">En Rio de Janeiro, jovenes compositores fusionan el Samba tradicional con la armonia compleja del Jazz moderno.</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Samba:</strong> Ritmo sincopado brasileno, festivo y energetico</li>
+       <li><strong>Jazz:</strong> Acordes complejos y sofisticacion armonica</li>
+       <li><strong>Poesia moderna:</strong> Letras mas reflexivas que narrativas</li>
+      </ul>
+      <div class="subheading">
+       Acordes Complejos: Maj7, 9, 11
+      </div>
+      <div class="technical-box">
+       <strong>Evolucion Armonica:</strong>
+       <p style="margin-top: 0.5rem;"><strong>Blues:</strong> 3 acordes simples (I, IV, V)</p>
+       <p><strong>Jazz:</strong> Acordes con extensiones (maj7, 9)</p>
+       <p><strong>Bossa Nova:</strong> Acordes muy complejos (maj9, 11, 13) que suenan sofisticados</p>
+      </div>
+      <div class="subheading">
+       Ritmo Sutil
+      </div>
+      <p style="color: #5a4a42;">A diferencia del Samba pesado, Bossa Nova toca ligero. La guitarra genera voicings delicados que contrastan con el groove constante del bajo y la percusion.</p>
+      <div class="subheading">
+       Joao Gilberto: La Voz Revolucionaria
+      </div>
+      <p style="color: #5a4a42;">Joao Gilberto transformo como se canta en Bossa Nova: voz suave, intima, casi hablada. Influencio a cantantes de todo el mundo.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=5Zi6x5KKS08" target="_blank" rel="noopener noreferrer" class="video-link">Joao Gilberto - Garota de Ipanema</a> <a href="https://www.youtube.com/watch?v=wvJ-qv9Tuvk" target="_blank" rel="noopener noreferrer" class="video-link">Tom Jobim - Aguas de Marco</a> <a href="https://www.youtube.com/watch?v=UUlJqC3gk14" target="_blank" rel="noopener noreferrer" class="video-link">Astrud Gilberto and Stan Getz - Girl from Ipanema</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Perrone, Charles A. and Dunn, Christopher. Brazilian Popular Music and Globalization. Routledge, 2001.
+       </div>
+       <div class="bibliography-item">
+        Behague, Gerard. Music in Latin America: An Introduction. Prentice-Hall, 1979.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('jazz')">Jazz (influencia armonica)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('reggae')">Reggae (otro hibrido moderno)</span>
+       </div>
+      </div>
+     </div><!-- HIP-HOP -->
+     <div id="article-hiphop" class="article-container">
+      <div class="keywords">
+       hip-hop sampling rimas DJ MCing breaking graffiti Bronx Nueva York sampler producción
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Hip-Hop: La Reutilizacion de la Musica</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>Hip-Hop inventa una forma totalmente nueva de hacer musica: reutilizando fragmentos de canciones antiguas, combinandolos con rimas rapidas y con ritmo.</em></p>
+      <h2>Nacimiento en Nueva York (1970s)</h2>
+      <p style="color: #5a4a42;">DJ Kool Herc, un DJ jamaicano en el Bronx, descubre algo revolucionario: la ruptura (break) de las canciones de Funk. Estas pequenas secciones de 15-30 segundos, donde solo la bateria toca, son increiblemente danzadoras.</p>
+      <p style="color: #5a4a42;">Usando dos platos, repite esta ruptura infinitamente. Nace el Hip-Hop.</p>
+      <div class="subheading">
+       El Sampler: La Herramienta Magica
+      </div>
+      <p style="color: #5a4a42;">El sampler digital (maquina que graba sonidos) permitio a productores grabar 8 segundos de cualquier cancion. De repente, cualquiera podia ser productor musical, no solo grandes estudios.</p>
+      <div class="technical-box">
+       <strong>Antes:</strong> Solo estudios profesionales podian producir musica 
+       <p style="margin-top: 0.5rem;"><strong>Despues:</strong> Un joven con un sampler de 200 dolares podia crear musica profesional</p>
+      </div>
+      <div class="subheading">
+       Los Elementos del Hip-Hop
+      </div>
+      <ul style="color: #5a4a42;">
+       <li><strong>MCing:</strong> Rapeo rapido con rimas (herencia de call-and-response blues)</li>
+       <li><strong>DJing:</strong> Manipulacion de discos con efectos (scratching)</li>
+       <li><strong>Breaking:</strong> Danza acrobatica</li>
+       <li><strong>Graffiti:</strong> Arte visual</li>
+      </ul>
+      <div class="subheading">
+       Sampling: Citas Musicales
+      </div>
+      <p style="color: #5a4a42;">El Hip-Hop samplea (cita) directamente musica anterior. Escuchas James Brown en una cancion de Dr. Dre. El oyente reconoce la referencia. Es como literatura: construir significado mediante referencias.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=oa8DNuVW1G0" target="_blank" rel="noopener noreferrer" class="video-link">Grandmaster Flash - The Message</a> <a href="https://www.youtube.com/watch?v=knJbh8SqgXQ" target="_blank" rel="noopener noreferrer" class="video-link">Historia del Hip-Hop</a> <a href="https://www.youtube.com/watch?v=07Y0cy-nvAg" target="_blank" rel="noopener noreferrer" class="video-link">A Tribe Called Quest - Can I Kick It?</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Rose, Tricia. Black Noise: Rap Music and Black Culture in Contemporary America. Wesleyan University Press, 1994.
+       </div>
+       <div class="bibliography-item">
+        Chang, Jeff. Can't Stop Won't Stop: A History of the Hip-Hop Generation. St. Martin's Press, 2005.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('blues')">Blues (estructura call-and-response heredada)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('electronic')">Musica Electronica (tecnologia similar)</span>
+       </div>
+      </div>
+     </div><!-- RUMBA CONGOLESA -->
+     <div id="article-rumba" class="article-container">
+      <div class="keywords">
+       rumba congolesa Congo guitarra eléctrica sebene ritmo cubano grabaciones viaje musical
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Rumba Congolesa: Viaje de la Musica</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>Rumba Congolesa es un ejemplo perfecto de como la musica viaja por el mundo. Ritmo cubano se exporta a Congo y es reinterpretado localmente.</em></p>
+      <h2>Historia (1950s)</h2>
+      <p style="color: #5a4a42;">Despues de la Segunda Guerra Mundial, discos cubanos llegan a Congo. Musicos congoleses escuchan son cubano, mambo y cha-cha-cha, y crean su propia version: Rumba Congolesa.</p>
+      <div class="subheading">
+       La Estructura del Sebene
+      </div>
+      <p style="color: #5a4a42;">Una cancion de Rumba Congolesa tipica tiene dos partes:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Primera Parte (Canto):</strong> Voz sobre un groove suave</li>
+       <li><strong>Sebene:</strong> Aceleracion rapida con guitarras juguetona y percusion intensa. Es donde el groove explota en energia.</li>
+      </ul>
+      <div class="subheading">
+       Guitarras: Instrumento Principal
+      </div>
+      <p style="color: #5a4a42;">A diferencia de Cuba (donde la percusion domina), Congo privilegia la guitarra electrica. Los guitarristas congoleses crean patrones complejos que juegan con la melodia y el ritmo simultaneamente.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=Gxk1P7iy7OA" target="_blank" rel="noopener noreferrer" class="video-link">Kinshasa Symphony (Rumba Congolesa)</a> <a href="https://www.youtube.com/watch?v=nLhS4P9pxpU" target="_blank" rel="noopener noreferrer" class="video-link">Grand Kalle and L'Orchestre Kale-Kaley</a> <a href="https://www.youtube.com/watch?v=dVRWWdqiT5k" target="_blank" rel="noopener noreferrer" class="video-link">Franco and OK Jazz - Independance Cha Cha</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Stewart, Gary. Rumba on the River: A History of the Popular Music of the Two Congos. Verso, 2000.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('afrobeat')">Afrobeat (otro renacimiento africano)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('reggae')">Reggae (otro viaje musical)</span>
+       </div>
+      </div>
+     </div><!-- ROCK BRITANICO -->
+     <div id="article-british-invasion" class="article-container">
+      <div class="keywords">
+       rock británico blues amplificación guitarras distorsionadas Beatles Rolling Stones Led Zeppelin innovación
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Rock Britanico: Transformacion del Blues</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>El Rock Britanico toma el Blues estadounidense, lo modifica con armonia sofisticada, y lo re-exporta al mundo.</em></p>
+      <h2>Nacimiento en Londres (1960s)</h2>
+      <p style="color: #5a4a42;">En los 1950s, jovenes musicos britanicos descubren discos de Blues estadounidenses. Escuchan a Muddy Waters, Chuck Berry y Robert Johnson.</p>
+      <p style="color: #5a4a42;">Pero hay un problema: en EE.UU., estos artistas son perseguidos por racismo. En Inglaterra, estos jovenes blancos pueden tocar libremente.</p>
+      <ul style="color: #5a4a42;">
+       <li>The Rolling Stones escuchan Muddy Waters</li>
+       <li>The Beatles escuchan Chuck Berry</li>
+       <li>Led Zeppelin escuchan Robert Johnson</li>
+      </ul>
+      <div class="subheading">
+       De Blues a Rock: Amplificacion
+      </div>
+      <p style="color: #5a4a42;">El Blues original es intimo: una voz y una guitarra. El Rock lo amplifica: guitarras distorsionadas, baterias fuertes, tecnologia moderna.</p>
+      <div class="subheading">
+       Los Beatles: Innovacion Constante
+      </div>
+      <p style="color: #5a4a42;">Los Beatles no solo tocan Blues. Experimentan constantemente:</p>
+      <ul style="color: #5a4a42;">
+       <li>A Hard Day's Night (1964): Hook memorable en guitarra</li>
+       <li>Norwegian Wood (1965): Sitar (instrumento oriental)</li>
+       <li>Strawberry Fields Forever (1967): Grabacion experimental</li>
+       <li>Revolution 9 (1968): Ruido como material musical</li>
+      </ul>
+      <div class="subheading">
+       Rock Progresivo: Rechazando la Estructura Pop
+      </div>
+      <p style="color: #5a4a42;">En los 1970s, bandas como Genesis y Yes rechazaron la cancion de 3 minutos. Crearon canciones de 7-20 minutos con:</p>
+      <ul style="color: #5a4a42;">
+       <li>Cambios de tempo y tono</li>
+       <li>Orquestacion compleja</li>
+       <li>Narrativas conceptuales</li>
+      </ul>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=zwcUHerYSKY" target="_blank" rel="noopener noreferrer" class="video-link">The Beatles - A Hard Day's Night</a> <a href="https://www.youtube.com/watch?v=K3DsVgT50a4" target="_blank" rel="noopener noreferrer" class="video-link">The Rolling Stones - I Can't Get No Satisfaction</a> <a href="https://www.youtube.com/watch?v=cJ4dVWI-JXA" target="_blank" rel="noopener noreferrer" class="video-link">Led Zeppelin - Whole Lotta Love</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Everett, Walter. The Beatles as Musicians: The Quarry Men Through Rubber Soul. Oxford University Press, 2001.
+       </div>
+       <div class="bibliography-item">
+        Macan, Edward. Rocking the Classics: English Progressive Rock and the Counterculture. Oxford University Press, 1997.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('blues')">Blues (fuente directa)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('electronic')">Musica Electronica (innovacion similar)</span>
+       </div>
+      </div>
+     </div><!-- ELECTRONICA -->
+     <div id="article-electronic" class="article-container">
+      <div class="keywords">
+       música electrónica sintetizador Moog electrónico disco synthpop house techno trance drum bass producción
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Musica Electronica: El Sintetizador</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>La Musica Electronica nace cuando instrumentos comienzan a ser reemplazados por maquinas. El sintetizador crea sonidos que antes eran imposibles.</em></p>
+      <h2>Origenes: Primeros Sintetizadores (1960s)</h2>
+      <p style="color: #5a4a42;">El sintetizador Moog (1964) fue revolucionario. Por primera vez, un musico podia crear sonidos completamente nuevos, sin orquesta.</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Sintetizador Moog:</strong> Creado por Robert Moog, abre posibilidades sonoras</li>
+       <li><strong>Walter Carlos:</strong> Graba Switched-On Bach (1968), clasica en sintetizador</li>
+       <li><strong>Kraftwerk:</strong> Banda alemana que abraza completamente la electronica</li>
+      </ul>
+      <div class="subheading">
+       Generos Electronicos Principales
+      </div>
+      <ul style="color: #5a4a42;">
+       <li><strong>Disco (1970s):</strong> Sintetizadores con ritmo contagioso para bailar</li>
+       <li><strong>Synthpop (1980s):</strong> Sintetizadores dominan la estructura de cancion</li>
+       <li><strong>House (1980s-1990s):</strong> Ritmo repetitivo hipnotizante de 120+ BPM</li>
+       <li><strong>Techno (1980s-1990s):</strong> Mas minimalista y experimental que House</li>
+       <li><strong>Trance (1990s-2000s):</strong> Builds melodicos y drops emocionales</li>
+       <li><strong>Drum and Bass (1990s):</strong> Ritmo rapido (170-180 BPM) con baja profunda</li>
+      </ul>
+      <div class="technical-box">
+       <strong>Caracteristica Comun:</strong> La electronica permite loop (repeticion) perfecta. Un patron de 4 compases puede repetirse 200 veces sin cambiar. Esto es imposible con musicos.
+      </div>
+      <div class="subheading">
+       El Drop: Momento de Climax
+      </div>
+      <p style="color: #5a4a42;">En House y Trance, la estructura es: build-up (construccion gradual) drop (caida repentina donde todo explota). Este momento es disenado para ser catartico en la pista de baile.</p>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=VJ0c2xqXJKE" target="_blank" rel="noopener noreferrer" class="video-link">Kraftwerk - The Robots</a> <a href="https://www.youtube.com/watch?v=HyHNuVaZJ-k" target="_blank" rel="noopener noreferrer" class="video-link">Daft Punk - One More Time</a> <a href="https://www.youtube.com/watch?v=e-IWRmpefzE" target="_blank" rel="noopener noreferrer" class="video-link">Fatboy Slim - Praise You</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Pinch, Trevor and Trocco, Frank. Analog Days: The Invention and Impact of the Moog Synthesizer. Harvard University Press, 2002.
+       </div>
+       <div class="bibliography-item">
+        Fikentscher, Kai. You Better Work! Underground Dance Music in New York City. University Press of New England, 2000.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('hiphop')">Hip-Hop (uso de tecnologia similar)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('kpop')">K-Pop (produccion electronica moderna)</span>
+       </div>
+      </div>
+     </div><!-- REGGAE -->
+     <div id="article-reggae" class="article-container">
+      <div class="keywords">
+       reggae Jamaica ska rocksteady roots Bob Marley rastafari dancehall dub ritmo
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">Reggae: Ritmo y Resistencia</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>Reggae es la musica de Jamaica que fusiona Ska, Rocksteady y Roots. Bob Marley la hizo famosa mundialmente.</em></p>
+      <h2>Nacimiento en Jamaica (1960s)</h2>
+      <p style="color: #5a4a42;">Jamaica, isla caribena post-colonial, produce musica unica en tres etapas:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Ska (1960s):</strong> Ritmo rapido y energetico</li>
+       <li><strong>Rocksteady (mid-1960s):</strong> Version mas lenta del Ska</li>
+       <li><strong>Reggae (late 1960s):</strong> Evolucion del Rocksteady con enfasis en el ONE</li>
+      </ul>
+      <div class="subheading">
+       El Enfasis en el ONE
+      </div>
+      <p style="color: #5a4a42;">En Reggae, el ritmo tipicamente enfatiza el primer beat (ONE) de cada compas, en lugar del dos y el cuatro como en Rock. Esto crea un groove relajado pero hipnotizante.</p>
+      <div class="technical-box">
+       <strong>Patron Ritmico Tipico:</strong>
+       <p style="margin-top: 0.5rem;">ONE (fuerte) - 2 - 3 - 4 - ONE (fuerte) - 2 - 3 - 4</p>
+       <p style="margin-top: 0.5rem;">Las guitarras rasguean en sincopa alrededor de este ONE</p>
+      </div>
+      <div class="subheading">
+       Bob Marley y la Rastafarianism
+      </div>
+      <p style="color: #5a4a42;">Bob Marley (1945-1981) fue el embajador global de Reggae. Sus canciones no son solo musica: son mensajes de espiritualidad, libertad y justicia social. La religion Rastafari influencio sus letras profundamente.</p>
+      <ul style="color: #5a4a42;">
+       <li>Get Up, Stand Up: Llamado a la resistencia</li>
+       <li>One Love: Mensaje de unidad global</li>
+       <li>Redemption Song: Espiritualidad y liberacion</li>
+      </ul>
+      <div class="subheading">
+       Subgeneros del Reggae
+      </div>
+      <ul style="color: #5a4a42;">
+       <li><strong>Roots Reggae:</strong> Mensajes profundos, lento, espiritual</li>
+       <li><strong>Dancehall:</strong> Mas rapido, electrico, para bailar</li>
+       <li><strong>Dub:</strong> Remixes experimentales con delay y reverb</li>
+       <li><strong>Ragga:</strong> Rima rapida sobre beats electronicos</li>
+      </ul>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=ZBJ2h6MdqE0" target="_blank" rel="noopener noreferrer" class="video-link">Bob Marley - Redemption Song</a> <a href="https://www.youtube.com/watch?v=ebXbLfLACGM" target="_blank" rel="noopener noreferrer" class="video-link">Bob Marley - One Love</a> <a href="https://www.youtube.com/watch?v=xKKqAX1UHeU" target="_blank" rel="noopener noreferrer" class="video-link">Peter Tosh - Get Up, Stand Up</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        White, Timothy. Catch a Fire: The Life of Bob Marley. Holt, Rinehart and Winston, 1983.
+       </div>
+       <div class="bibliography-item">
+        Barrow, Steve and Dalton, Peter. The Rough Guide to Reggae. Rough Guides, 1997.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('afrobeat')">Afrobeat (mensaje politico similar)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('hiphop')">Hip-Hop (evolucion de la musica caribena)</span>
+       </div>
+      </div>
+     </div><!-- K-POP -->
+     <div id="article-kpop" class="article-container">
+      <div class="keywords">
+       k-pop Corea del Sur sistema idol audiciones entrenamiento manufactura coreografía producción industrial
+      </div>
+      <div class="breadcrumb"><span onclick="loadArticle('home')" style="cursor: pointer;">Inicio</span>
+      </div>
+      <h1 class="wiki-title text-4xl font-bold mb-2" style="color: #2c1810;">K-Pop: Manufactura Moderna</h1>
+      <p style="color: #5a4a42; margin: 1rem 0;"><em>K-Pop es el ejemplo mas extremo de musica como negocio. Es todo planeado: los artistas, sus imagenes, sus redes sociales.</em></p>
+      <h2>Sistema Idol de Corea del Sur (1990s-2000s)</h2>
+      <p style="color: #5a4a42;">Corea del Sur crea un sistema industrial para producir artistas musicales:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Audiciones masivas:</strong> Se buscan miles de candidatos</li>
+       <li><strong>Entrenamiento:</strong> 5-7 anos de preparacion intensiva</li>
+       <li><strong>Debut planificado:</strong> El momento exacto es elegido por el negocio</li>
+       <li><strong>Control total:</strong> Imagen, redes sociales, relaciones amorosas controladas</li>
+      </ul>
+      <div class="subheading">
+       La Formula K-Pop
+      </div>
+      <div class="technical-box">
+       <strong>Grupo Tipico:</strong>
+       <p style="margin-top: 0.5rem;">- 5-7 miembros (numero optimo para fanbase)</p>
+       <p>- Edades 18-27 (juventud + atraccion)</p>
+       <p>- Genero diverso (atraccion multidemiografica)</p>
+       <p>- Coreografia sincronizada perfectamente</p>
+       <p>- Canciones en coreano + ingles (mercado global)</p>
+       <p>- Produccion visual de lujo (videos costosos)</p>
+      </div>
+      <div class="subheading">
+       Estructura Musical K-Pop
+      </div>
+      <p style="color: #5a4a42;">Musicalmente, K-pop combina:</p>
+      <ul style="color: #5a4a42;">
+       <li><strong>Pop occidental:</strong> Cancion de 3-4 minutos con hook pegajoso</li>
+       <li><strong>Hip-Hop:</strong> Versos rapidos, produccion beat moderna</li>
+       <li><strong>EDM:</strong> Sintesis, drop explosivo, 120-130 BPM</li>
+      </ul>
+      <div class="subheading">
+       Fenomeno Global
+      </div>
+      <p style="color: #5a4a42;">K-pop usa algoritmos de redes sociales para crear fenomenos globales. Coordina:</p>
+      <ul style="color: #5a4a42;">
+       <li>Posts a horas especificas en redes sociales</li>
+       <li>Merchandising sistematico (albumes coleccionables)</li>
+       <li>Participacion de fanbase coordinada (trending global)</li>
+      </ul>
+      <div class="resources-section">
+       <h4>Recursos Recomendados</h4><a href="https://www.youtube.com/watch?v=9bZkp7q19f0" target="_blank" rel="noopener noreferrer" class="video-link">BTS - Dynamite (Official Video)</a> <a href="https://www.youtube.com/watch?v=m5qwcYL1F50" target="_blank" rel="noopener noreferrer" class="video-link">The Business of K-Pop (Documental)</a> <a href="https://www.youtube.com/watch?v=Sgr-WVxMn6k" target="_blank" rel="noopener noreferrer" class="video-link">BLACKPINK - DDU-DU DDU-DU</a>
+      </div>
+      <div class="resources-section">
+       <h4>Lecturas Recomendadas</h4>
+       <div class="bibliography-item">
+        Jung, Sun. Korean Beef: Popular Culture and the Branding of Korea. Oxford University Press, 2018.
+       </div>
+       <div class="bibliography-item">
+        Shin, Hyunjoon and Park, Kyung Hyun (eds.). Korean Pop Culture and Contents Industry. Korean Culture Institute, 2010.
+       </div>
+      </div>
+      <div class="related-box">
+       <h4>Conexiones</h4>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('revolucion-industrial')">Revolucion Industrial (manufactura aplicada a cultura)</span>
+       </div>
+       <div class="related-item"><span class="related-link" onclick="loadArticle('british-invasion')">Rock Britanico (estrategia de exportacion similar)</span>
+       </div>
+      </div>
+     </div>
+    </article>
+   </main>
+  </div>
+  <script>
+    // Objeto con IDs de artículos y sus palabras clave
+    const articleKeywords = {
+      'home': ['inicio', 'bienvenida', 'introducción', 'estudiantes', 'análisis', 'contexto', 'recursos', 'educativos', 'temas', 'principales'],
+      'revolucion-industrial': ['revolución', 'industrial', 'fonógrafo', 'grabación', 'radio', 'tecnología', 'industria', 'discográfica', 'edison', 'cilindros', 'cera', 'gramófono'],
+      'blues': ['blues', 'raíces', 'afroamericanas', 'delta', 'misisipi', 'acordes', 'progresión', 'compases', 'improvisación', 'call-and-response'],
+      'jazz': ['jazz', 'improvisación', 'nueva', 'orleans', 'bandas', 'metales', 'ragtime', 'épocas', 'swing', 'bebop', 'cool'],
+      'afrobeat': ['afrobeat', 'ritmos', 'yoruba', 'poliritmia', 'funk', 'groove', 'lagos', 'nigeria', 'fela', 'kuti', 'resistencia', 'política'],
+      'bossa-nova': ['bossa', 'nova', 'samba', 'brasil', 'río', 'janeiro', 'guitarra', 'acordes', 'sofisticación', 'joao', 'gilberto'],
+      'hiphop': ['hip-hop', 'sampling', 'rimas', 'dj', 'mcing', 'breaking', 'graffiti', 'bronx', 'nueva', 'york', 'sampler', 'producción'],
+      'rumba': ['rumba', 'congolesa', 'congo', 'guitarra', 'eléctrica', 'sebene', 'ritmo', 'cubano', 'grabaciones', 'viaje', 'musical'],
+      'british-invasion': ['rock', 'británico', 'blues', 'amplificación', 'guitarras', 'distorsionadas', 'beatles', 'rolling', 'stones', 'led', 'zeppelin', 'innovación'],
+      'electronic': ['música', 'electrónica', 'sintetizador', 'moog', 'electrónico', 'disco', 'synthpop', 'house', 'techno', 'trance', 'drum', 'bass', 'producción'],
+      'reggae': ['reggae', 'jamaica', 'ska', 'rocksteady', 'roots', 'bob', 'marley', 'rastafari', 'dancehall', 'dub', 'ritmo'],
+      'kpop': ['k-pop', 'corea', 'del', 'sur', 'sistema', 'idol', 'audiciones', 'entrenamiento', 'manufactura', 'coreografía', 'producción', 'industrial']
+    };
+
+    function loadArticle(articleId) {
+      document.querySelectorAll('.article-container').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      const article = document.getElementById('article-' + articleId);
+      if (article) {
+        article.classList.add('active');
+        document.querySelector('main').scrollTop = 0;
+      }
+
+      // Update button active state
+      document.querySelectorAll('.nav-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+
+    function loadArticleAndCloseMenu(articleId) {
+      loadArticle(articleId);
+      const menu = document.getElementById('mobile-articles-menu');
+      menu.classList.add('hidden');
+    }
+
+    const articlesToggleBtn = document.getElementById('articles-toggle-btn');
+    const mobileArticlesMenu = document.getElementById('mobile-articles-menu');
+
+    articlesToggleBtn.addEventListener('click', () => {
+      mobileArticlesMenu.classList.toggle('hidden');
+    });
+
+    // Búsqueda por palabras clave
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      const resultsDiv = document.getElementById('search-results');
+
+      if (searchTerm.length === 0) {
+        resultsDiv.innerHTML = '';
+        return;
+      }
+
+      const results = [];
+
+      // Buscar en palabras clave de cada artículo
+      Object.entries(articleKeywords).forEach(([articleId, keywords]) => {
+        keywords.forEach(keyword => {
+          if (keyword.includes(searchTerm)) {
+            const articleTitle = getArticleTitle(articleId);
+            if (!results.find(r => r.id === articleId)) {
+              results.push({ id: articleId, title: articleTitle });
+            }
+          }
+        });
+      });
+
+      if (results.length === 0) {
+        resultsDiv.innerHTML = '<div style="color: #8b7355; padding: 0.75rem;">No se encontraron resultados</div>';
+      } else {
+        resultsDiv.innerHTML = results.map(r =>
+          `<div class="search-result" onclick="loadArticle('${r.id}')">${r.title}</div>`
+        ).join('');
+      }
+    });
+
+    function getArticleTitle(articleId) {
+      const titles = {
+        'home': 'Inicio',
+        'revolucion-industrial': 'Revolución Industrial',
+        'blues': 'Blues',
+        'jazz': 'Jazz',
+        'afrobeat': 'Afrobeat',
+        'bossa-nova': 'Bossa Nova',
+        'hiphop': 'Hip-Hop',
+        'rumba': 'Rumba Congolesa',
+        'british-invasion': 'Rock Británico',
+        'electronic': 'Música Electrónica',
+        'reggae': 'Reggae',
+        'kpop': 'K-Pop'
+      };
+      return titles[articleId] || articleId;
+    }
+
+    window.addEventListener('load', () => {
+      loadArticle('home');
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cee49bdf48fda8b',t:'MTc3MTI1Nzk0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
